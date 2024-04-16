@@ -1,0 +1,122 @@
+Read_File = "summerize.csv"
+Write_File = "summerize_maxWidth.csv"
+################################################################################
+#### Program for analyzing cell width characteristics from Oufti csv files #####
+################################################################################
+#                                                                              #
+# This code will read all the oufti cell list csv files in a directory and     #
+# create a new csv file  with the maximum for the cross sectional cell widths of #
+# each cell.
+#
+# * ALL credit for this code is to Ian Sparks (https://github.com/IanLairdSparks).*
+#                                                                              #
+##### INSTRUCTIONS: ############################################################
+# 1. to use this code, you need to have all the csv files exported from oufti  #
+#    that you want to analyze at once in one file along with this python file. #
+#    Make sure that no other csv files are in that directory. You will also    #
+#    need the NumPy package for python installed.                              #
+#                                                                              #
+# 2. Next, open the terminal, and change the directory to that same address    #
+#    (using the command: cd /your/directory/here)                              #
+#                                                                              #
+# 3. Finally, in the terminal enter the command: python cellwidthalongprofile.py
+#    A new csv file called MeshOutput.csv will appear in the directory next    #
+#    to your other csv files; this can be opened with excel                    #
+################################################################################
+import itertools
+import sys
+import matplotlib
+from matplotlib import pyplot as plt
+import math # 'math' needed for 'sqrt'
+import csv
+import numpy as np
+import re
+import os
+from scipy.stats import kde
+from scipy.interpolate import spline
+import matplotlib.colors as colors
+
+
+
+#Distance function
+def distance(xi,xii,yi,yii):
+    sq1 = (xi-xii)*(xi-xii)
+    sq2 = (yi-yii)*(yi-yii)
+    return math.sqrt(sq1 + sq2)
+
+# Python program to get average of a list
+def Average(lst):
+    return sum(lst) / len(lst)
+###############################################################################
+#WT:
+x = []
+y = []
+#fig, ax = plt.subplots(2, 4)
+
+with open(Read_File, "rb") as inFile:
+    csv_reader = csv.reader(inFile, delimiter=',')
+    MeshCells = []
+    Max_widths = []
+    for row in csv_reader:
+        if len(row) < 7:
+            continue
+        if len(row[6]) < 10:
+            continue
+        MeshCells.append(row[6])
+    for i in MeshCells:
+        x = []
+        y = []
+        CellWidths = []
+        mod_i = str(i)
+        mod_i = mod_i.translate(None, "['")
+        mod_i = mod_i.translate(None, "']")
+        CoordinateList = mod_i.split(";")
+        x1List = CoordinateList[0].split(" ")
+        while ("" in x1List):
+            x1List.remove("")
+        y1List = CoordinateList[1].split(" ")
+        while ("" in y1List):
+            y1List.remove("")
+        x2List = CoordinateList[2].split(" ")
+        while ("" in x2List):
+            x2List.remove("")
+        y2List = CoordinateList[3].split(" ")
+        while ("" in y2List):
+            y2List.remove("")
+        for e in range(len(x1List)):
+            CellWidths.append(distance(float(x1List[e]),float(
+            x2List[e]),float(y1List[e]),float(y2List[e]))/13.5135)
+
+        Max_widths.append(max(CellWidths))
+
+    inFile.close()
+
+#print(Max_widths)
+print(Average(Max_widths))
+print(len(Max_widths))
+#ax[0,0].set_title('WT', y=1.01)
+#ax[0,0].text((0.003-0.15), 0.85, '100%', fontsize=10, color ='g')
+#ax[0,0].text((0.003-0.15), 1.25, '8%', fontsize=10, color ='y')
+#ax[0,0].text((0.003-0.15), 1.45, '0%', fontsize=10, color ='#fc8400')
+#ax[0,0].text((0.003-0.15), 1.65, '0%', fontsize=10, color ='r')
+#ax[0,0].text((0.015-0.15), 1.815, 'n = 100 cells', fontsize=14, color ='k')
+
+#########################################################################
+import csv
+
+header = ['Max_cell_width']
+
+
+with open(Write_File, 'w') as f:
+    writer = csv.writer(f)
+
+    # write the header
+    writer.writerow(header)
+
+    # write the data
+    for i in Max_widths:
+        writer.writerow([i])
+
+
+
+exit()
